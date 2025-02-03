@@ -87,5 +87,15 @@ nb_model.fit(training_data)
 test_messages = [message for _, message in testing_data]
 test_labels = [label for label, _ in testing_data]
 test_predictions = nb_model.predict(test_messages)
+
+# Calcular accuracy
 accuracy = sum(1 for true, pred in zip(test_labels, test_predictions) if true == pred) / len(test_labels)
+
+# Comentario sobre la métrica utilizada
+# Accuracy es una métrica adecuada cuando las clases están balanceadas en el dataset.
+# Sin embargo, en caso de que haya un desbalance significativo entre ham y spam,
+# métricas como Precision y Recall pueden proporcionar una mejor evaluación del rendimiento del modelo.
+# Precision nos dice cuántos de los mensajes clasificados como spam realmente lo son,
+# mientras que Recall mide cuántos de los mensajes de spam reales fueron correctamente identificados.
+
 print(f"Naive Bayes Accuracy: {accuracy:.4f}")
