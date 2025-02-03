@@ -66,12 +66,25 @@ def predict(text, spam_probs, ham_probs, priors, vocab_size):
     for word in words:
         spam_prob += np.log(spam_probs.get(word, 1 / (sum(spam_probs.values()) + vocab_size)))
         ham_prob += np.log(ham_probs.get(word, 1 / (sum(ham_probs.values()) + vocab_size)))
+    
+    prob_spam = np.exp(spam_prob) / (np.exp(spam_prob) + np.exp(ham_prob))
+    prob_ham = np.exp(ham_prob) / (np.exp(spam_prob) + np.exp(ham_prob))
+    
+    return ('spam' if spam_prob > ham_prob else 'ham'), prob_spam, prob_ham
+    words = text.split()
+    spam_prob = np.log(priors['spam'])
+    ham_prob = np.log(priors['ham'])
+
+    for word in words:
+        spam_prob += np.log(spam_probs.get(word, 1 / (sum(spam_probs.values()) + vocab_size)))
+        ham_prob += np.log(ham_probs.get(word, 1 / (sum(ham_probs.values()) + vocab_size)))
 
     return 'spam' if spam_prob > ham_prob else 'ham'
 
 #Evaluación y Métricas del modelo
 def evaluate_model(test_texts, test_labels, spam_probs, ham_probs, priors, vocab_size):
-    predictions = [predict(text, spam_probs, ham_probs, priors, vocab_size) for text in test_texts]
+    test_labels = [label.strip().lower() for label in test_labels]  # Asegurar que las etiquetas sean cadenas limpias
+    predictions = [predict(text, spam_probs, ham_probs, priors, vocab_size)[0] for text in test_texts]
     acc = accuracy_score(test_labels, predictions)
     prec = precision_score(test_labels, predictions, pos_label='spam')
     rec = recall_score(test_labels, predictions, pos_label='spam')
@@ -104,7 +117,24 @@ def compare_with_sklearn(train_texts, train_labels, test_texts, test_labels):
     print(f"Recall: {rec}")
     print(f"F1-score: {f1}\n")
 
+# Clasificación de mensajes futuros
+def classify_message(spam_probs, ham_probs, priors, vocab_size):
+    while True:
+        user_message = input("Ingrese un mensaje para clasificar: ")
+        cleaned_message = clean_text(user_message)
+        prediction, prob_spam, prob_ham = predict(cleaned_message, spam_probs, ham_probs, priors, vocab_size)
+        print(f"El mensaje ingresado ha sido clasificado como: {prediction}")
+        print(f"Probabilidad de Spam: {prob_spam:.4f}, Probabilidad de Ham: {prob_ham:.4f}")
+        cont = input("¿Desea clasificar otro mensaje? (s/n): ").strip().lower()
+        if cont != 's':
+            break
+    
+
 if __name__ == "__main__":
+    data, labels = load_dataset("entrenamiento.txt")
+    train_texts, test_texts, train_labels, test_labels = split_data(data, labels)
+    print("Training Sklearn Naive Bayes Model...")
+    compare_with_sklearn(train_texts, train_labels, test_texts, test_labels)
     data, labels = load_dataset("entrenamiento.txt")
     train_texts, test_texts, train_labels, test_labels = split_data(data, labels)
 
@@ -112,5 +142,11 @@ if __name__ == "__main__":
     spam_probs, ham_probs, priors, vocab_size = train_naive_bayes(train_texts, train_labels)
     evaluate_model(test_texts, test_labels, spam_probs, ham_probs, priors, vocab_size)
 
-    print("Training Sklearn Naive Bayes Model...")
-    compare_with_sklearn(train_texts, train_labels, test_texts, test_labels)
+    classify_message(spam_probs, ham_probs, priors, vocab_size)
+
+# Comentario sobre la métrica utilizada
+# Accuracy es una métrica adecuada cuando las clases están balanceadas en el dataset.
+# Sin embargo, en caso de que haya un desbalance significativo entre ham y spam,
+# métricas como Precision y Recall pueden proporcionar una mejor evaluación del rendimiento del modelo.
+# Precision nos dice cuántos de los mensajes clasificados como spam realmente lo son,
+# mientras que Recall mide cuántos de los mensajes de spam reales fueron correctamente identificados.
