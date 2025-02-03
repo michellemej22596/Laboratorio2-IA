@@ -1,7 +1,7 @@
-#Laboratorio 2
-#Clasificador de mensajes
-#Task 2
-#Ricardo Chuy, Silvia Illescas, Nelson García y Michelle Mejía
+# Laboratorio 2
+# Clasificador de mensajes
+# Task 2
+# Ricardo Chuy, Silvia Illescas, Nelson García y Michelle Mejía
 import re
 import random
 import numpy as np
@@ -11,13 +11,13 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.feature_extraction.text import CountVectorizer
 
-#Limpiieza del dataset y conversión a minúsculas
+# Limpieza del dataset y conversión a minúsculas
 def clean_text(text):
     text = text.lower()
     text = re.sub(r'[^a-z\s]', '', text)
     return text
 
-#Carga del dataset
+# Carga del dataset
 def load_dataset(filename):
     with open(filename, 'r', encoding='utf-8') as file:
         lines = file.readlines()
@@ -31,11 +31,11 @@ def load_dataset(filename):
             data.append(clean_text(parts[1]))
     return data, labels
 
-#Dividimos 80% para el entrenamiento y 20% test
+# Dividimos 80% para el entrenamiento y 20% test
 def split_data(data, labels):
     return train_test_split(data, labels, test_size=0.2, random_state=42)
 
-#Entrenamiento con Laplace Smoothing
+# Entrenamiento con Laplace Smoothing
 def train_naive_bayes(train_texts, train_labels):
     word_counts = {"spam": defaultdict(lambda: 1), "ham": defaultdict(lambda: 1)}
     class_counts = {"spam": 0, "ham": 0}
@@ -57,7 +57,7 @@ def train_naive_bayes(train_texts, train_labels):
 
     return spam_probs, ham_probs, priors, vocab_size
 
-#Predicciones de Spam o Ham
+# Predicciones de Spam o Ham
 def predict(text, spam_probs, ham_probs, priors, vocab_size):
     words = text.split()
     spam_prob = np.log(priors['spam'])
@@ -71,17 +71,8 @@ def predict(text, spam_probs, ham_probs, priors, vocab_size):
     prob_ham = np.exp(ham_prob) / (np.exp(spam_prob) + np.exp(ham_prob))
     
     return ('spam' if spam_prob > ham_prob else 'ham'), prob_spam, prob_ham
-    words = text.split()
-    spam_prob = np.log(priors['spam'])
-    ham_prob = np.log(priors['ham'])
 
-    for word in words:
-        spam_prob += np.log(spam_probs.get(word, 1 / (sum(spam_probs.values()) + vocab_size)))
-        ham_prob += np.log(ham_probs.get(word, 1 / (sum(ham_probs.values()) + vocab_size)))
-
-    return 'spam' if spam_prob > ham_prob else 'ham'
-
-#Evaluación y Métricas del modelo
+# Evaluación y Métricas del modelo
 def evaluate_model(test_texts, test_labels, spam_probs, ham_probs, priors, vocab_size):
     test_labels = [label.strip().lower() for label in test_labels]  # Asegurar que las etiquetas sean cadenas limpias
     predictions = [predict(text, spam_probs, ham_probs, priors, vocab_size)[0] for text in test_texts]
@@ -96,7 +87,7 @@ def evaluate_model(test_texts, test_labels, spam_probs, ham_probs, priors, vocab
     print(f"Recall: {rec}")
     print(f"F1-score: {f1}\n")
 
-#Uso de librerías y comparativa
+# Uso de librerías y comparativa
 def compare_with_sklearn(train_texts, train_labels, test_texts, test_labels):
     vectorizer = CountVectorizer()
     X_train = vectorizer.fit_transform(train_texts)
@@ -128,20 +119,15 @@ def classify_message(spam_probs, ham_probs, priors, vocab_size):
         cont = input("¿Desea clasificar otro mensaje? (s/n): ").strip().lower()
         if cont != 's':
             break
-    
 
 if __name__ == "__main__":
     data, labels = load_dataset("entrenamiento.txt")
     train_texts, test_texts, train_labels, test_labels = split_data(data, labels)
     print("Training Sklearn Naive Bayes Model...")
     compare_with_sklearn(train_texts, train_labels, test_texts, test_labels)
-    data, labels = load_dataset("entrenamiento.txt")
-    train_texts, test_texts, train_labels, test_labels = split_data(data, labels)
-
     print("Training Custom Naive Bayes Model...")
     spam_probs, ham_probs, priors, vocab_size = train_naive_bayes(train_texts, train_labels)
     evaluate_model(test_texts, test_labels, spam_probs, ham_probs, priors, vocab_size)
-
     classify_message(spam_probs, ham_probs, priors, vocab_size)
 
 # Comentario sobre la métrica utilizada
@@ -150,3 +136,12 @@ if __name__ == "__main__":
 # métricas como Precision y Recall pueden proporcionar una mejor evaluación del rendimiento del modelo.
 # Precision nos dice cuántos de los mensajes clasificados como spam realmente lo son,
 # mientras que Recall mide cuántos de los mensajes de spam reales fueron correctamente identificados.
+
+# Comparación de Modelos
+# La implementación con Sklearn obtiene una mayor precisión y F1-score en general,
+# debido a la optimización interna y al uso eficiente de probabilidades suavizadas.
+# Sin embargo, la implementación manual es útil para comprender cómo funciona Naive Bayes.
+# Sklearn maneja mejor grandes volúmenes de datos y optimiza hiperparámetros.
+# Accuracy es adecuada si las clases están balanceadas, pero en caso de desbalance,
+# Precision y Recall pueden proporcionar una mejor evaluación del rendimiento del modelo.
+
